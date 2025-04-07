@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -52,6 +53,23 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				book: {
+					50: '#f8f5f1',
+					100: '#e8e0d4',
+					200: '#d5c6b2',
+					300: '#c2a98a',
+					400: '#b08f69',
+					500: '#a07e59',
+					600: '#8b6e4d',
+					700: '#725a40',
+					800: '#5a4732',
+					900: '#3d2f21',
+				},
+				paper: {
+					100: '#fff9ed',
+					200: '#fff4df',
+					300: '#fde9c8',
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -84,11 +102,25 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'page-turn': {
+					'0%': {
+						transform: 'rotateY(0deg)',
+						transformOrigin: 'left center'
+					},
+					'100%': {
+						transform: 'rotateY(-180deg)',
+						transformOrigin: 'left center'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'page-turn': 'page-turn 1.5s ease-in-out forwards'
+			},
+			backgroundImage: {
+				'paper-texture': "url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmYWYwIj48L3JlY3Q+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNmOGYzZTgiIG9wYWNpdHk9IjAuMDUiPjwvcmVjdD4KPHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0iI2Y1ZWZlMCIgb3BhY2l0eT0iMC4wNSI+PC9yZWN0Pgo8L3N2Zz4=')"
 			}
 		}
 	},
