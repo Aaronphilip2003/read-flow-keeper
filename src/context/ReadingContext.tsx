@@ -1,3 +1,4 @@
+
 import { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import { Book, ReadingSession, Quote, Note, ReadingGoal, ReadingStats } from "@/types";
 import { toast } from "sonner";
@@ -9,7 +10,7 @@ interface ReadingContextType {
   notes: Note[];
   goals: ReadingGoal[];
   stats: ReadingStats;
-  addBook: (book: Omit<Book, "id">) => void;
+  addBook: (book: Omit<Book, "id">) => Book;
   updateBook: (book: Book) => void;
   deleteBook: (id: string) => void;
   addSession: (session: Omit<ReadingSession, "id">) => void;
@@ -286,7 +287,6 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     addGoal,
     updateGoal,
     deleteGoal,
-    calculateStats,
   };
 
   return (

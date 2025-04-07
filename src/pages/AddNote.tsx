@@ -84,7 +84,8 @@ const AddNote = () => {
   // Submit handler
   const onSubmit = (data: NoteFormValues) => {
     addNote({
-      ...data,
+      bookId: data.bookId,
+      text: data.text,
       date: new Date().toISOString(),
       page: data.page || 1,
     });

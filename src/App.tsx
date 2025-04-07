@@ -1,7 +1,6 @@
 
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ReadingProvider } from "@/context/ReadingContext";
@@ -28,36 +27,34 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ReadingProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppLayout>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/books" element={<Books />} />
-              <Route path="/books/add" element={<AddBook />} />
-              <Route path="/books/edit/:id" element={<EditBook />} />
-              <Route path="/books/:id" element={<BookDetails />} />
-              <Route path="/sessions" element={<Sessions />} />
-              <Route path="/sessions/add" element={<AddSession />} />
-              <Route path="/sessions/add/:bookId" element={<AddSession />} />
-              <Route path="/quotes" element={<Quotes />} />
-              <Route path="/quotes/add" element={<AddQuote />} />
-              <Route path="/quotes/add/:bookId" element={<AddQuote />} />
-              <Route path="/notes" element={<Notes />} />
-              <Route path="/notes/add" element={<AddNote />} />
-              <Route path="/notes/add/:bookId" element={<AddNote />} />
-              <Route path="/goals" element={<Goals />} />
-              <Route path="/goals/add" element={<AddGoal />} />
-              <Route path="/statistics" element={<Statistics />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AppLayout>
-        </BrowserRouter>
-      </ReadingProvider>
-    </TooltipProvider>
+    <ReadingProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/books" element={<Books />} />
+            <Route path="/books/add" element={<AddBook />} />
+            <Route path="/books/edit/:id" element={<EditBook />} />
+            <Route path="/books/:id" element={<BookDetails />} />
+            <Route path="/sessions" element={<Sessions />} />
+            <Route path="/sessions/add" element={<AddSession />} />
+            <Route path="/sessions/add/:bookId" element={<AddSession />} />
+            <Route path="/quotes" element={<Quotes />} />
+            <Route path="/quotes/add" element={<AddQuote />} />
+            <Route path="/quotes/add/:bookId" element={<AddQuote />} />
+            <Route path="/notes" element={<Notes />} />
+            <Route path="/notes/add" element={<AddNote />} />
+            <Route path="/notes/add/:bookId" element={<AddNote />} />
+            <Route path="/goals" element={<Goals />} />
+            <Route path="/goals/add" element={<AddGoal />} />
+            <Route path="/statistics" element={<Statistics />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AppLayout>
+      </BrowserRouter>
+    </ReadingProvider>
   </QueryClientProvider>
 );
 
