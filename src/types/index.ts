@@ -1,4 +1,3 @@
-
 export interface Book {
   id: string;
   title: string;
@@ -29,6 +28,14 @@ export interface Quote {
   page: number;
   date: string; // ISO date string
   notes?: string;
+}
+
+export interface Note {
+  id: string;
+  bookId: string;
+  text: string;
+  page: number;
+  date: string; // ISO date string
 }
 
 export interface ReadingGoal {

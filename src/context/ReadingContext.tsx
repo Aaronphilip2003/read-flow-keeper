@@ -1,23 +1,26 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from "react";
-import { Book, ReadingSession, Quote, ReadingGoal, ReadingStats } from "@/types";
+import { Book, ReadingSession, Quote, Note, ReadingGoal, ReadingStats } from "@/types";
 import { toast } from "sonner";
 
 interface ReadingContextType {
   books: Book[];
   sessions: ReadingSession[];
   quotes: Quote[];
+  notes: Note[];
   goals: ReadingGoal[];
   stats: ReadingStats;
-  addBook: (book: Omit<Book, "id">) => Book;
+  addBook: (book: Omit<Book, "id">) => void;
   updateBook: (book: Book) => void;
   deleteBook: (id: string) => void;
   addSession: (session: Omit<ReadingSession, "id">) => void;
+  deleteSession: (id: string) => void;
   addQuote: (quote: Omit<Quote, "id">) => void;
   deleteQuote: (id: string) => void;
+  addNote: (note: Omit<Note, "id">) => void;
+  deleteNote: (id: string) => void;
   addGoal: (goal: Omit<ReadingGoal, "id">) => void;
   updateGoal: (goal: ReadingGoal) => void;
   deleteGoal: (id: string) => void;
-  calculateStats: () => ReadingStats;
 }
 
 const defaultStats: ReadingStats = {
@@ -36,6 +39,7 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
   const [books, setBooks] = useState<Book[]>([]);
   const [sessions, setSessions] = useState<ReadingSession[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [goals, setGoals] = useState<ReadingGoal[]>([]);
   const [stats, setStats] = useState<ReadingStats>(defaultStats);
 
@@ -43,11 +47,13 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     const loadedBooks = localStorage.getItem("readingTracker_books");
     const loadedSessions = localStorage.getItem("readingTracker_sessions");
     const loadedQuotes = localStorage.getItem("readingTracker_quotes");
+    const loadedNotes = localStorage.getItem("readingTracker_notes");
     const loadedGoals = localStorage.getItem("readingTracker_goals");
-
+    
     if (loadedBooks) setBooks(JSON.parse(loadedBooks));
     if (loadedSessions) setSessions(JSON.parse(loadedSessions));
     if (loadedQuotes) setQuotes(JSON.parse(loadedQuotes));
+    if (loadedNotes) setNotes(JSON.parse(loadedNotes));
     if (loadedGoals) setGoals(JSON.parse(loadedGoals));
   }, []);
 
@@ -55,10 +61,11 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("readingTracker_books", JSON.stringify(books));
     localStorage.setItem("readingTracker_sessions", JSON.stringify(sessions));
     localStorage.setItem("readingTracker_quotes", JSON.stringify(quotes));
+    localStorage.setItem("readingTracker_notes", JSON.stringify(notes));
     localStorage.setItem("readingTracker_goals", JSON.stringify(goals));
     
     setStats(calculateStats());
-  }, [books, sessions, quotes, goals]);
+  }, [books, sessions, quotes, notes, goals]);
 
   const addBook = (bookData: Omit<Book, "id">) => {
     const newBook = {
@@ -79,6 +86,7 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     setBooks((prev) => prev.filter((book) => book.id !== id));
     setSessions((prev) => prev.filter((session) => session.bookId !== id));
     setQuotes((prev) => prev.filter((quote) => quote.bookId !== id));
+    setNotes((prev) => prev.filter((note) => note.bookId !== id));
     toast("Book deleted successfully");
   };
 
@@ -108,18 +116,39 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     toast("Reading session logged successfully");
   };
 
+  const deleteSession = (id: string) => {
+    setSessions((prev) => prev.filter((session) => session.id !== id));
+    toast("Reading session deleted successfully");
+  };
+
   const addQuote = (quoteData: Omit<Quote, "id">) => {
     const newQuote = {
-      id: crypto.randomUUID(),
       ...quoteData,
+      id: crypto.randomUUID(),
     };
+
     setQuotes((prev) => [...prev, newQuote]);
-    toast("Quote saved successfully");
+    toast.success("Quote added successfully");
   };
 
   const deleteQuote = (id: string) => {
     setQuotes((prev) => prev.filter((quote) => quote.id !== id));
-    toast("Quote deleted successfully");
+    toast.success("Quote deleted successfully");
+  };
+
+  const addNote = (noteData: Omit<Note, "id">) => {
+    const newNote = {
+      ...noteData,
+      id: crypto.randomUUID(),
+    };
+
+    setNotes((prev) => [...prev, newNote]);
+    toast.success("Note added successfully");
+  };
+
+  const deleteNote = (id: string) => {
+    setNotes((prev) => prev.filter((note) => note.id !== id));
+    toast.success("Note deleted successfully");
   };
 
   const addGoal = (goalData: Omit<ReadingGoal, "id">) => {
@@ -242,21 +271,29 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     books,
     sessions,
     quotes,
+    notes,
     goals,
     stats,
     addBook,
     updateBook,
     deleteBook,
     addSession,
+    deleteSession,
     addQuote,
     deleteQuote,
+    addNote,
+    deleteNote,
     addGoal,
     updateGoal,
     deleteGoal,
     calculateStats,
   };
 
-  return <ReadingContext.Provider value={value}>{children}</ReadingContext.Provider>;
+  return (
+    <ReadingContext.Provider value={value}>
+      {children}
+    </ReadingContext.Provider>
+  );
 };
 
 export const useReading = () => {

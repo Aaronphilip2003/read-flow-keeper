@@ -13,19 +13,22 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, formatDistanceToNow } from "date-fns";
-import { Book, BookText, ClockIcon, Edit, ListPlus, PlayCircle, Plus, Quote, Trash } from "lucide-react";
+import { Book, BookText, ClockIcon, Edit, ListPlus, NotepadText, PlayCircle, Plus, Quote, Trash } from "lucide-react";
 
 const BookDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { books, sessions, quotes, deleteBook } = useReading();
+  const { books, sessions, quotes, notes, deleteBook } = useReading();
   const [book, setBook] = useState(books.find((b) => b.id === id));
   
-  // Find reading sessions and quotes for this book
+  // Find reading sessions, quotes, and notes for this book
   const bookSessions = sessions.filter((session) => session.bookId === id)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     
   const bookQuotes = quotes.filter((quote) => quote.bookId === id)
+    .sort((a, b) => b.page - a.page);
+    
+  const bookNotes = notes.filter((note) => note.bookId === id)
     .sort((a, b) => b.page - a.page);
   
   // Calculate reading stats for this book
@@ -99,12 +102,21 @@ const BookDetails = () => {
               </Link>
             </Button>
             
-            <Button variant="outline" className="w-full" asChild>
-              <Link to={`/quotes/add/${book.id}`}>
-                <Quote className="mr-2 h-4 w-4" />
-                Add Quote
-              </Link>
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" className="w-full" asChild>
+                <Link to={`/quotes/add/${book.id}`}>
+                  <Quote className="mr-2 h-4 w-4" />
+                  Add Quote
+                </Link>
+              </Button>
+              
+              <Button variant="outline" className="w-full" asChild>
+                <Link to={`/notes/add/${book.id}`}>
+                  <NotepadText className="mr-2 h-4 w-4" />
+                  Add Note
+                </Link>
+              </Button>
+            </div>
             
             <div className="flex gap-2 mt-2">
               <Button variant="outline" size="icon" className="flex-1" asChild>
@@ -193,9 +205,10 @@ const BookDetails = () => {
           
           <div className="mt-6">
             <Tabs defaultValue="sessions">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="sessions">Reading Sessions</TabsTrigger>
                 <TabsTrigger value="quotes">Quotes</TabsTrigger>
+                <TabsTrigger value="notes">Notes</TabsTrigger>
               </TabsList>
               
               <TabsContent value="sessions" className="mt-4">
@@ -289,6 +302,49 @@ const BookDetails = () => {
                         <Link to={`/quotes/add/${book.id}`}>
                           <Plus className="h-4 w-4 mr-2" />
                           Add Quote
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="notes" className="mt-4">
+                {bookNotes.length > 0 ? (
+                  <div className="space-y-4">
+                    {bookNotes.map((note) => (
+                      <Card key={note.id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <NotepadText className="h-5 w-5 text-book-500 mt-1 flex-shrink-0" />
+                            <div>
+                              <div className="flex flex-wrap justify-between gap-2">
+                                <span className="text-sm text-muted-foreground">
+                                  Page {note.page}
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {format(new Date(note.date), "MMM d, yyyy")}
+                                </span>
+                              </div>
+                              <p className="mt-2">{note.text}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <NotepadText className="h-10 w-10 text-muted-foreground mx-auto" />
+                      <h3 className="mt-3 font-medium">No notes saved yet</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Save important information as you read
+                      </p>
+                      <Button className="mt-4" asChild>
+                        <Link to={`/notes/add/${book.id}`}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Note
                         </Link>
                       </Button>
                     </CardContent>

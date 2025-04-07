@@ -10,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { 
   BookOpen, 
@@ -17,6 +18,9 @@ import {
   Calendar, 
   Clock, 
   LineChart, 
+  NotepadText,
+  PanelLeft,
+  PanelRight,
   Quote, 
   Settings, 
   Target
@@ -25,6 +29,7 @@ import { Link, useLocation } from "react-router-dom";
 
 export function AppSidebar() {
   const location = useLocation();
+  const { state } = useSidebar();
   
   const menuItems = [
     {
@@ -48,6 +53,11 @@ export function AppSidebar() {
       icon: Quote,
     },
     {
+      title: "Notes",
+      url: "/notes",
+      icon: NotepadText,
+    },
+    {
       title: "Goals",
       url: "/goals",
       icon: Target,
@@ -64,7 +74,9 @@ export function AppSidebar() {
       <SidebarHeader className="flex items-center gap-2 px-4">
         <BookOpen className="h-6 w-6 text-book-700" />
         <span className="font-semibold text-lg">ReadFlow</span>
-        <SidebarTrigger className="ml-auto h-8 w-8" />
+        <SidebarTrigger className="ml-auto h-8 w-8">
+          {state === "expanded" ? <PanelLeft className="h-4 w-4" /> : <PanelRight className="h-4 w-4" />}
+        </SidebarTrigger>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -73,7 +85,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.url} tooltip={item.title}>
                     <Link to={item.url} className="flex items-center gap-3">
                       <item.icon className="h-5 w-5" />
                       <span>{item.title}</span>
