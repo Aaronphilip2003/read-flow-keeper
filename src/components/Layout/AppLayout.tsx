@@ -2,6 +2,7 @@
 import { ReactNode } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "sonner";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -10,6 +11,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <AppSidebar />
         <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
+      <Toaster />
     </SidebarProvider>
   );
 }
