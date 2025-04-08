@@ -27,6 +27,7 @@ import AddGoal from "@/pages/AddGoal";
 import Statistics from "@/pages/Statistics";
 import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ function AppContent() {
     <AppLayout>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/" element={
           <ProtectedRoute>
             <Dashboard />
