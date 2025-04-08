@@ -4,13 +4,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/use-toast'
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const { toast } = useToast()
+    const navigate = useNavigate()
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -28,6 +29,14 @@ export default function Login() {
                 title: "Success",
                 description: "Logged in successfully",
             })
+
+            // Get the stored path or default to '/'
+            const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/'
+            // Clear the stored path
+            sessionStorage.removeItem('redirectAfterLogin')
+            // Redirect to the stored path
+            navigate(redirectPath)
+
         } catch (error) {
             toast({
                 variant: "destructive",

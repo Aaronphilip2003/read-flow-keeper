@@ -75,7 +75,11 @@ function AppContent() {
             <Dashboard />
           </ProtectedRoute>
         } />
-        <Route path="/books" element={<Books />} />
+        <Route path="/books" element={
+          <ProtectedRoute>
+            <Books />
+          </ProtectedRoute>
+        } />
         <Route path="/books/add" element={
           <ProtectedRoute>
             <AddBook />

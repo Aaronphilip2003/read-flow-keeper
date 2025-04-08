@@ -28,7 +28,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(session?.user ?? null)
         })
 
-        return () => subscription.unsubscribe()
+        // Add event listener for tab/window closing
+        const handleTabClose = () => {
+            supabase.auth.signOut()
+            sessionStorage.clear()
+        }
+
+        window.addEventListener('beforeunload', handleTabClose)
+
+        return () => {
+            subscription.unsubscribe()
+            window.removeEventListener('beforeunload', handleTabClose)
+        }
     }, [])
 
     return (
