@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useReading } from "@/context/ReadingContext";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/lib/supabase";
 import {
   Select,
   SelectContent,
@@ -13,20 +13,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Card, 
-  CardContent, 
+import {
+  Card,
+  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
   CardFooter
 } from "@/components/ui/card";
 import { Book } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const AddBook = () => {
   const navigate = useNavigate();
   const { addBook } = useReading();
-  
+  const { toast } = useToast();
+
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [totalPages, setTotalPages] = useState("");
@@ -34,30 +36,79 @@ const AddBook = () => {
   const [cover, setCover] = useState("");
   const [status, setStatus] = useState<"reading" | "completed" | "on-hold" | "to-read">("to-read");
   const [notes, setNotes] = useState("");
-  
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!title || !author || !totalPages) {
-      alert("Please fill in all required fields");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please fill in all required fields",
+      });
       return;
     }
-    
-    const newBook = addBook({
-      title,
-      author,
-      totalPages: parseInt(totalPages),
-      currentPage: status === "to-read" ? 0 : parseInt(currentPage || "0"),
-      cover: cover || undefined,
-      startDate: new Date().toISOString(),
-      status,
-      notes: notes || undefined,
-    });
-    
-    navigate(`/books/${newBook.id}`);
+
+    setIsLoading(true);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
+      const bookData = {
+        title,
+        author,
+        total_pages: parseInt(totalPages),
+        current_page: status === "to-read" ? 0 : parseInt(currentPage || "0"),
+        cover_url: cover || null,
+        start_date: new Date().toISOString(),
+        status,
+        notes: notes || null,
+        user_id: user.id,
+      };
+
+      const { data, error } = await supabase
+        .from("books")
+        .insert(bookData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add to local context as well
+      addBook({
+        ...bookData,
+        id: data.id,
+        currentPage: bookData.current_page,
+        totalPages: bookData.total_pages,
+        cover: bookData.cover_url,
+      });
+
+      toast({
+        title: "Success",
+        description: "Book added successfully",
+      });
+
+      navigate(`/books/${data.id}`);
+    } catch (error) {
+      console.error("Error adding book:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add book. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
-  
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card className="border-book-200">
@@ -67,7 +118,7 @@ const AddBook = () => {
             Track your reading progress by adding a new book to your collection
           </CardDescription>
         </CardHeader>
-        
+
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -82,7 +133,7 @@ const AddBook = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="author">Author*</Label>
                   <Input
@@ -94,12 +145,12 @@ const AddBook = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted rounded-md p-6">
                 {cover ? (
-                  <img 
-                    src={cover} 
-                    alt="Book cover preview" 
+                  <img
+                    src={cover}
+                    alt="Book cover preview"
                     className="h-32 object-contain"
                     onError={() => setCover("")}
                   />
@@ -111,7 +162,7 @@ const AddBook = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="cover">Cover Image URL (optional)</Label>
               <Input
@@ -121,7 +172,7 @@ const AddBook = () => {
                 placeholder="https://example.com/book-cover.jpg"
               />
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="totalPages">Total Pages*</Label>
@@ -135,7 +186,7 @@ const AddBook = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="status">Reading Status*</Label>
                 <Select
@@ -154,7 +205,7 @@ const AddBook = () => {
                 </Select>
               </div>
             </div>
-            
+
             {status !== "to-read" && (
               <div className="space-y-2">
                 <Label htmlFor="currentPage">Current Page</Label>
@@ -169,7 +220,7 @@ const AddBook = () => {
                 />
               </div>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="notes">Notes (optional)</Label>
               <Textarea
@@ -181,12 +232,19 @@ const AddBook = () => {
               />
             </div>
           </CardContent>
-          
+
           <CardFooter className="flex justify-between">
-            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate(-1)}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
-            <Button type="submit">Add Book</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Adding..." : "Add Book"}
+            </Button>
           </CardFooter>
         </form>
       </Card>
