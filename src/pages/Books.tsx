@@ -1,15 +1,17 @@
-
-import { useState } from "react";
+import { useState, useEffect } from 'react'
+import { format, parseISO } from 'date-fns'
+import { supabase } from '@/lib/supabase'
+import { useToast } from '@/components/ui/use-toast'
 import { useReading } from "@/context/ReadingContext";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
+import {
+  Card,
+  CardContent,
   CardFooter,
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -29,15 +31,31 @@ import { Progress } from "@/components/ui/progress";
 import { Book as BookType } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 
+interface Book {
+  id: string
+  title: string
+  author: string
+  total_pages: number
+  current_page: number
+  cover_url: string | null
+  status: 'to-read' | 'reading' | 'completed' | 'on-hold'
+  notes: string | null
+  start_date: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
 const Books = () => {
-  const { books, deleteBook } = useReading();
+  const { books, setBooks, deleteBook } = useReading();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   const filteredBooks = books
-    .filter(book => 
-      book.title.toLowerCase().includes(search.toLowerCase()) || 
+    .filter(book =>
+      book.title.toLowerCase().includes(search.toLowerCase()) ||
       book.author.toLowerCase().includes(search.toLowerCase())
     )
     .filter(book => {
@@ -49,12 +67,63 @@ const Books = () => {
       const statusOrder = { "reading": 0, "to-read": 1, "on-hold": 2, "completed": 3 };
       return statusOrder[a.status] - statusOrder[b.status];
     });
-    
+
   const handleDeleteBook = (book: BookType) => {
     if (confirm(`Are you sure you want to delete "${book.title}"? This will also delete all reading sessions and quotes associated with this book.`)) {
       deleteBook(book.id);
     }
   };
+
+  // Safe date formatter that won't throw errors
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '-';
+    try {
+      return format(parseISO(dateString), 'MMM d, yyyy');
+    } catch (error) {
+      console.error('Invalid date:', dateString);
+      return '-';
+    }
+  };
+
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  const fetchBooks = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('books')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Sanitize the data before setting it
+      const sanitizedBooks = data.map(book => ({
+        ...book,
+        // Ensure dates are either valid ISO strings or null
+        start_date: book.start_date || null,
+        created_at: book.created_at || null,
+        updated_at: book.updated_at || null
+      }));
+
+      setBooks(sanitizedBooks);
+    } catch (error) {
+      console.error('Error fetching books:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load books. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div>Loading books...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -67,7 +136,7 @@ const Books = () => {
           </Link>
         </Button>
       </div>
-      
+
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Input
@@ -91,21 +160,24 @@ const Books = () => {
           </SelectContent>
         </Select>
       </div>
-      
+
       {filteredBooks.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBooks.map(book => {
-            const progress = Math.round((book.currentPage / book.totalPages) * 100);
-            const startDate = new Date(book.startDate);
-            
+            const progress = Math.round((book.current_page / book.total_pages) * 100);
+            const startDate = new Date(book.start_date || '');
+
             return (
               <Card key={book.id} className="overflow-hidden">
                 <div className="relative h-40 bg-book-100">
-                  {book.cover ? (
-                    <img 
-                      src={book.cover} 
-                      alt={book.title} 
+                  {book.cover_url ? (
+                    <img
+                      src={book.cover_url}
+                      alt={book.title}
                       className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'placeholder-image-url';
+                      }}
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center bg-gradient-to-r from-book-200 to-book-300">
@@ -131,9 +203,9 @@ const Books = () => {
                           <PlayCircle className="h-4 w-4 mr-2" />
                           Start Reading
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
-                          onClick={() => handleDeleteBook(book)}
+                          onClick={() => handleDeleteBook(book as BookType)}
                         >
                           <Trash className="h-4 w-4 mr-2" />
                           Delete Book
@@ -141,7 +213,7 @@ const Books = () => {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  
+
                   <div className="absolute top-2 left-2">
                     <div className={`
                       px-2 py-1 text-xs rounded-full
@@ -157,32 +229,32 @@ const Books = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <CardHeader className="p-4 pb-0">
                   <CardTitle className="text-lg font-medium line-clamp-1">{book.title}</CardTitle>
                 </CardHeader>
-                
+
                 <CardContent className="p-4 pb-0">
                   <p className="text-sm text-muted-foreground mb-3">{book.author}</p>
-                  
+
                   {book.status !== 'to-read' && (
                     <>
                       <div className="mb-1 flex justify-between text-xs">
-                        <span>Page {book.currentPage} of {book.totalPages}</span>
+                        <span>Page {book.current_page} of {book.total_pages}</span>
                         <span>{progress}%</span>
                       </div>
                       <Progress value={progress} className="h-1" />
                     </>
                   )}
                 </CardContent>
-                
+
                 <CardFooter className="p-4 pt-3 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <ClockIcon className="h-3 w-3" />
                     <span>
-                      {book.status === 'to-read' 
-                        ? 'Added ' 
-                        : 'Started '} 
+                      {book.status === 'to-read'
+                        ? 'Added '
+                        : 'Started '}
                       {formatDistanceToNow(startDate, { addSuffix: true })}
                     </span>
                   </div>

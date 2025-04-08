@@ -1,4 +1,3 @@
-
 import { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import { Book, ReadingSession, Quote, Note, ReadingGoal, ReadingStats } from "@/types";
 import { toast } from "sonner";
@@ -10,6 +9,7 @@ interface ReadingContextType {
   notes: Note[];
   goals: ReadingGoal[];
   stats: ReadingStats;
+  setBooks: (books: Book[]) => void;
   addBook: (book: Omit<Book, "id">) => Book;
   updateBook: (book: Book) => void;
   deleteBook: (id: string) => void;
@@ -50,7 +50,7 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     const loadedQuotes = localStorage.getItem("readingTracker_quotes");
     const loadedNotes = localStorage.getItem("readingTracker_notes");
     const loadedGoals = localStorage.getItem("readingTracker_goals");
-    
+
     if (loadedBooks) setBooks(JSON.parse(loadedBooks));
     if (loadedSessions) setSessions(JSON.parse(loadedSessions));
     if (loadedQuotes) setQuotes(JSON.parse(loadedQuotes));
@@ -64,7 +64,7 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("readingTracker_quotes", JSON.stringify(quotes));
     localStorage.setItem("readingTracker_notes", JSON.stringify(notes));
     localStorage.setItem("readingTracker_goals", JSON.stringify(goals));
-    
+
     setStats(calculateStats());
   }, [books, sessions, quotes, notes, goals]);
 
@@ -103,13 +103,13 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
       prev.map((book) =>
         book.id === sessionData.bookId
           ? {
-              ...book,
-              currentPage: Math.max(book.currentPage, sessionData.endPage),
-              status: 
-                sessionData.endPage >= book.totalPages 
-                  ? "completed" 
-                  : book.status === "to-read" ? "reading" : book.status
-            }
+            ...book,
+            currentPage: Math.max(book.currentPage, sessionData.endPage),
+            status:
+              sessionData.endPage >= book.totalPages
+                ? "completed"
+                : book.status === "to-read" ? "reading" : book.status
+          }
           : book
       )
     );
@@ -190,16 +190,16 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     if (sessionDates.length > 0) {
       const today = new Date().toISOString().split("T")[0];
       const hasReadToday = sessionDates.includes(today);
-      
+
       for (let i = sessionDates.length - 1; i >= 0; i--) {
         const currentDate = new Date(sessionDates[i]);
-        
+
         if (i === sessionDates.length - 1) {
           const lastReadDate = new Date(sessionDates[i]);
           const daysSinceLastRead = Math.floor(
             (new Date().getTime() - lastReadDate.getTime()) / (1000 * 3600 * 24)
           );
-          
+
           if (daysSinceLastRead > 1) {
             break;
           }
@@ -209,7 +209,7 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
           const dayDiff = Math.floor(
             (prevDate.getTime() - currentDate.getTime()) / (1000 * 3600 * 24)
           );
-          
+
           if (dayDiff === 1) {
             currentStreak++;
           } else {
@@ -227,7 +227,7 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
           const dayDiff = Math.floor(
             (currentDate.getTime() - prevDate.getTime()) / (1000 * 3600 * 24)
           );
-          
+
           if (dayDiff === 1) {
             tempStreak++;
           } else {
@@ -238,7 +238,7 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       }
-      
+
       if (tempStreak > longestStreak) {
         longestStreak = tempStreak;
       }
@@ -246,12 +246,12 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
 
     const daysSinceFirstSession = sessionDates.length > 0
       ? Math.max(
-          1,
-          Math.ceil(
-            (new Date().getTime() - new Date(sessionDates[0]).getTime()) /
-              (1000 * 3600 * 24)
-          )
+        1,
+        Math.ceil(
+          (new Date().getTime() - new Date(sessionDates[0]).getTime()) /
+          (1000 * 3600 * 24)
         )
+      )
       : 1;
 
     const averagePagesPerDay = Math.round(pagesRead / daysSinceFirstSession);
@@ -275,6 +275,7 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     notes,
     goals,
     stats,
+    setBooks,
     addBook,
     updateBook,
     deleteBook,
