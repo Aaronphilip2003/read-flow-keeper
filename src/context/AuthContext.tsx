@@ -26,19 +26,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Listen for changes on auth state
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null)
+            setLoading(false)
         })
-
-        // Add event listener for tab/window closing
-        const handleTabClose = () => {
-            supabase.auth.signOut()
-            sessionStorage.clear()
-        }
-
-        window.addEventListener('beforeunload', handleTabClose)
 
         return () => {
             subscription.unsubscribe()
-            window.removeEventListener('beforeunload', handleTabClose)
         }
     }, [])
 
