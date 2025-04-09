@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useReading } from "@/context/ReadingContext";
@@ -13,9 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Card, 
-  CardContent, 
+import {
+  Card,
+  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
@@ -27,7 +26,7 @@ const EditBook = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { books, updateBook } = useReading();
-  
+
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [totalPages, setTotalPages] = useState("");
@@ -36,50 +35,53 @@ const EditBook = () => {
   const [status, setStatus] = useState<"reading" | "completed" | "on-hold" | "to-read">("to-read");
   const [notes, setNotes] = useState("");
   const [startDate, setStartDate] = useState("");
-  
+
   useEffect(() => {
     const book = books.find((b) => b.id === id);
-    
+
     if (book) {
       setTitle(book.title);
       setAuthor(book.author);
-      setTotalPages(book.totalPages.toString());
-      setCurrentPage(book.currentPage.toString());
+      setTotalPages(book.totalPages?.toString() || "");
+      setCurrentPage(book.currentPage?.toString() || "");
       setCover(book.cover || "");
       setStatus(book.status);
       setNotes(book.notes || "");
-      setStartDate(book.startDate);
+      setStartDate(book.startDate || "");
     } else {
       navigate("/books");
     }
   }, [id, books, navigate]);
-  
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!title || !author || !totalPages) {
       alert("Please fill in all required fields");
       return;
     }
-    
+
     if (!id) return;
-    
-    updateBook({
+
+    // If status is completed, set currentPage to totalPages
+    const finalCurrentPage = status === "completed" ? parseInt(totalPages) : parseInt(currentPage || "0");
+
+    await updateBook({
       id,
       title,
       author,
       totalPages: parseInt(totalPages),
-      currentPage: parseInt(currentPage || "0"),
+      currentPage: finalCurrentPage,
       cover: cover || undefined,
       startDate,
       status,
       notes: notes || undefined,
     });
-    
+
     navigate(`/books/${id}`);
   };
-  
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card className="border-book-200">
@@ -89,7 +91,7 @@ const EditBook = () => {
             Update details for your book
           </CardDescription>
         </CardHeader>
-        
+
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -104,7 +106,7 @@ const EditBook = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="author">Author*</Label>
                   <Input
@@ -116,12 +118,12 @@ const EditBook = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted rounded-md p-6">
                 {cover ? (
-                  <img 
-                    src={cover} 
-                    alt="Book cover preview" 
+                  <img
+                    src={cover}
+                    alt="Book cover preview"
                     className="h-32 object-contain"
                     onError={() => setCover("")}
                   />
@@ -133,7 +135,7 @@ const EditBook = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="cover">Cover Image URL (optional)</Label>
               <Input
@@ -143,7 +145,7 @@ const EditBook = () => {
                 placeholder="https://example.com/book-cover.jpg"
               />
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="totalPages">Total Pages*</Label>
@@ -157,7 +159,7 @@ const EditBook = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="status">Reading Status*</Label>
                 <Select
@@ -176,7 +178,7 @@ const EditBook = () => {
                 </Select>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="currentPage">Current Page</Label>
               <Input
@@ -189,7 +191,7 @@ const EditBook = () => {
                 placeholder="Enter current page"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="notes">Notes (optional)</Label>
               <Textarea
@@ -201,7 +203,7 @@ const EditBook = () => {
               />
             </div>
           </CardContent>
-          
+
           <CardFooter className="flex justify-between">
             <Button type="button" variant="outline" onClick={() => navigate(-1)}>
               Cancel

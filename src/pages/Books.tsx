@@ -31,20 +31,6 @@ import { Progress } from "@/components/ui/progress";
 import { Book as BookType } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 
-interface Book {
-  id: string
-  title: string
-  author: string
-  total_pages: number
-  current_page: number
-  cover_url: string | null
-  status: 'to-read' | 'reading' | 'completed' | 'on-hold'
-  notes: string | null
-  start_date: string | null
-  created_at: string | null
-  updated_at: string | null
-}
-
 const Books = () => {
   const { books, setBooks, deleteBook } = useReading();
   const navigate = useNavigate();
@@ -99,16 +85,24 @@ const Books = () => {
 
       if (error) throw error;
 
-      // Sanitize the data before setting it
+      // Transform snake_case to camelCase
       const sanitizedBooks = data.map(book => ({
-        ...book,
-        // Ensure dates are either valid ISO strings or null
-        start_date: book.start_date || null,
-        created_at: book.created_at || null,
-        updated_at: book.updated_at || null
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        totalPages: book.total_pages,
+        currentPage: book.current_page,
+        cover: book.cover_url,
+        status: book.status,
+        notes: book.notes,
+        startDate: book.start_date || null,
       }));
 
-      setBooks(sanitizedBooks);
+      // Only update if there are actual changes
+      const hasChanges = JSON.stringify(sanitizedBooks) !== JSON.stringify(books);
+      if (hasChanges) {
+        setBooks(sanitizedBooks);
+      }
     } catch (error) {
       console.error('Error fetching books:', error);
       toast({
@@ -164,15 +158,15 @@ const Books = () => {
       {filteredBooks.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBooks.map(book => {
-            const progress = Math.round((book.current_page / book.total_pages) * 100);
-            const startDate = new Date(book.start_date || '');
+            const progress = Math.round((book.currentPage / book.totalPages) * 100);
+            const startDate = book.startDate ? new Date(book.startDate) : null;
 
             return (
               <Card key={book.id} className="overflow-hidden">
                 <div className="relative h-40 bg-book-100">
-                  {book.cover_url ? (
+                  {book.cover ? (
                     <img
-                      src={book.cover_url}
+                      src={book.cover}
                       alt={book.title}
                       className="h-full w-full object-cover"
                       onError={(e) => {
@@ -240,7 +234,7 @@ const Books = () => {
                   {book.status !== 'to-read' && (
                     <>
                       <div className="mb-1 flex justify-between text-xs">
-                        <span>Page {book.current_page} of {book.total_pages}</span>
+                        <span>Page {book.currentPage} of {book.totalPages}</span>
                         <span>{progress}%</span>
                       </div>
                       <Progress value={progress} className="h-1" />
@@ -248,17 +242,14 @@ const Books = () => {
                   )}
                 </CardContent>
 
-                <CardFooter className="p-4 pt-3 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <ClockIcon className="h-3 w-3" />
-                    <span>
-                      {book.status === 'to-read'
-                        ? 'Added '
-                        : 'Started '}
-                      {formatDistanceToNow(startDate, { addSuffix: true })}
-                    </span>
-                  </div>
-                </CardFooter>
+                {startDate && (
+                  <CardFooter className="p-4 pt-2">
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <ClockIcon className="h-3 w-3 mr-1" />
+                      Started {formatDistanceToNow(startDate, { addSuffix: true })}
+                    </div>
+                  </CardFooter>
+                )}
               </Card>
             );
           })}

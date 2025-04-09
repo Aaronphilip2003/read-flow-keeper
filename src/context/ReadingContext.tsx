@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import { Book, ReadingSession, Quote, Note, ReadingGoal, ReadingStats } from "@/types";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 interface ReadingContextType {
   books: Book[];
@@ -78,9 +79,36 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     return newBook;
   };
 
-  const updateBook = (book: Book) => {
-    setBooks((prev) => prev.map((b) => (b.id === book.id ? book : b)));
-    toast("Book updated successfully");
+  const updateBook = async (book: Book) => {
+    try {
+      // Update in Supabase
+      const { error } = await supabase
+        .from('books')
+        .update({
+          title: book.title,
+          author: book.author,
+          total_pages: book.totalPages,
+          current_page: book.currentPage,
+          cover_url: book.cover,
+          status: book.status,
+          notes: book.notes,
+          start_date: book.startDate,
+        })
+        .eq('id', book.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setBooks((prev) => prev.map((b) => (b.id === book.id ? book : b)));
+      toast("Book updated successfully");
+    } catch (error) {
+      console.error('Error updating book:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update book. Please try again.",
+      });
+    }
   };
 
   const deleteBook = (id: string) => {
