@@ -87,18 +87,38 @@ function AppContent() {
         } />
         <Route path="/books/edit/:id" element={<EditBook />} />
         <Route path="/books/:id" element={<BookDetails />} />
-        <Route path="/sessions" element={<Sessions />} />
+        <Route path="/sessions" element={
+          <ProtectedRoute>
+            <Sessions />
+          </ProtectedRoute>
+        } />
         <Route path="/sessions/add" element={<AddSession />} />
         <Route path="/sessions/add/:bookId" element={<AddSession />} />
-        <Route path="/quotes" element={<Quotes />} />
+        <Route path="/quotes" element={
+          <ProtectedRoute>
+            <Quotes />
+          </ProtectedRoute>
+        } />
         <Route path="/quotes/add" element={<AddQuote />} />
         <Route path="/quotes/add/:bookId" element={<AddQuote />} />
-        <Route path="/notes" element={<Notes />} />
+        <Route path="/notes" element={
+          <ProtectedRoute>
+            <Notes />
+          </ProtectedRoute>
+        } />
         <Route path="/notes/add" element={<AddNote />} />
         <Route path="/notes/add/:bookId" element={<AddNote />} />
-        <Route path="/goals" element={<Goals />} />
+        <Route path="/goals" element={
+          <ProtectedRoute>
+            <Goals />
+          </ProtectedRoute>
+        } />
         <Route path="/goals/add" element={<AddGoal />} />
-        <Route path="/statistics" element={<Statistics />} />
+        <Route path="/statistics" element={
+          <ProtectedRoute>
+            <Statistics />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>
