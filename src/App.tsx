@@ -38,7 +38,15 @@ function AppContent() {
   useEffect(() => {
     const init = async () => {
       try {
-        await initializeSupabase()
+        // Create a promise that resolves after 5 seconds
+        const minLoadingTime = new Promise(resolve => setTimeout(resolve, 5000))
+
+        // Wait for both the database initialization and minimum loading time
+        await Promise.all([
+          initializeSupabase(),
+          minLoadingTime
+        ])
+
         setIsInitializing(false)
       } catch (error) {
         console.error('Failed to initialize Supabase:', error)
