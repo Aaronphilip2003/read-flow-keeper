@@ -56,10 +56,11 @@ function AppContent() {
 
   if (isInitializing) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Connecting to Database...</h2>
-          <p className="text-muted-foreground">Please wait while we establish connection</p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-book-50 to-paper-100">
+        <div className="text-center max-w-md px-4">
+          <h2 className="text-2xl font-semibold mb-3 text-book-800">Welcome to ReadFlow</h2>
+          <p className="text-lg text-book-600 mb-2">Your personal reading companion is getting ready...</p>
+          <p className="text-muted-foreground">Discover insights, track progress, and enjoy your reading journey</p>
         </div>
       </div>
     )
