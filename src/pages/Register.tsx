@@ -33,7 +33,7 @@ export default function Register() {
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/login`,
+                    emailRedirectTo: `${import.meta.env.VITE_APP_URL || window.location.origin}/login`,
                 },
             })
 
