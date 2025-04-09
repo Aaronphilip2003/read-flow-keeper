@@ -13,6 +13,8 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
         storage: window.sessionStorage,
         persistSession: true,
         autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce'
     },
 })
 

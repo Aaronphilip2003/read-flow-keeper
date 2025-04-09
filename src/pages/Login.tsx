@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/use-toast'
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 
 export default function Login() {
     const [email, setEmail] = useState('')
@@ -12,6 +12,35 @@ export default function Login() {
     const [loading, setLoading] = useState(false)
     const { toast } = useToast()
     const navigate = useNavigate()
+    const location = useLocation()
+
+    useEffect(() => {
+        // Check if there's a hash in the URL (from email verification)
+        const handleEmailVerification = async () => {
+            if (location.hash) {
+                setLoading(true)
+                try {
+                    const { error } = await supabase.auth.getSession()
+                    if (error) throw error
+
+                    toast({
+                        title: "Success",
+                        description: "Email verified successfully. You can now log in.",
+                    })
+                } catch (error) {
+                    toast({
+                        variant: "destructive",
+                        title: "Error",
+                        description: error instanceof Error ? error.message : "Failed to verify email",
+                    })
+                } finally {
+                    setLoading(false)
+                }
+            }
+        }
+
+        handleEmailVerification()
+    }, [location.hash, toast])
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
