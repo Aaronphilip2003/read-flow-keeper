@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useReading } from "@/context/ReadingContext";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { format, formatDistanceToNow } from "date-fns";
 import { BookOpen, Calendar, Clock, Plus, Search } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import {
   Select,
   SelectContent,
@@ -16,11 +16,47 @@ import {
 } from "@/components/ui/select";
 
 const Sessions = () => {
-  const { books, sessions } = useReading();
+  const { books, sessions, setSessions } = useReading();
   const [search, setSearch] = useState("");
   const [bookFilter, setBookFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
-  
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const fetchSessions = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('reading_sessions')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform snake_case to camelCase
+      const transformedSessions = data ? data.map(session => ({
+        id: session.id,
+        bookId: session.book_id,
+        startPage: session.start_page,
+        endPage: session.end_page,
+        date: session.date,
+        duration: session.duration,
+        notes: session.notes,
+      })) : [];
+
+      setSessions(transformedSessions);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      // Initialize with empty array on error
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Apply filters
   const filteredSessions = sessions
     .filter(session => {
@@ -28,24 +64,24 @@ const Sessions = () => {
       if (bookFilter !== "all" && session.bookId !== bookFilter) {
         return false;
       }
-      
+
       // Date filter
       if (dateFilter !== "all") {
         const sessionDate = new Date(session.date);
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        
-        if (dateFilter === "today" && 
-            sessionDate.toDateString() !== today.toDateString()) {
+
+        if (dateFilter === "today" &&
+          sessionDate.toDateString() !== today.toDateString()) {
           return false;
         }
-        
-        if (dateFilter === "yesterday" && 
-            sessionDate.toDateString() !== yesterday.toDateString()) {
+
+        if (dateFilter === "yesterday" &&
+          sessionDate.toDateString() !== yesterday.toDateString()) {
           return false;
         }
-        
+
         if (dateFilter === "week") {
           const weekAgo = new Date(today);
           weekAgo.setDate(weekAgo.getDate() - 7);
@@ -53,7 +89,7 @@ const Sessions = () => {
             return false;
           }
         }
-        
+
         if (dateFilter === "month") {
           const monthAgo = new Date(today);
           monthAgo.setMonth(monthAgo.getMonth() - 1);
@@ -62,7 +98,7 @@ const Sessions = () => {
           }
         }
       }
-      
+
       // Search filter - search by book title
       if (search) {
         const book = books.find(b => b.id === session.bookId);
@@ -70,11 +106,33 @@ const Sessions = () => {
           return false;
         }
       }
-      
+
       return true;
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-book-800">Reading Sessions</h1>
+          <Button asChild>
+            <Link to="/sessions/add">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Session
+            </Link>
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Clock className="h-10 w-10 text-muted-foreground mx-auto animate-pulse" />
+            <h3 className="mt-3 font-medium">Loading sessions...</h3>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -86,7 +144,7 @@ const Sessions = () => {
           </Link>
         </Button>
       </div>
-      
+
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Input
@@ -97,7 +155,7 @@ const Sessions = () => {
           />
           <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
         </div>
-        
+
         <Select value={bookFilter} onValueChange={setBookFilter}>
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filter by book" />
@@ -111,7 +169,7 @@ const Sessions = () => {
             ))}
           </SelectContent>
         </Select>
-        
+
         <Select value={dateFilter} onValueChange={setDateFilter}>
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filter by date" />
@@ -125,13 +183,13 @@ const Sessions = () => {
           </SelectContent>
         </Select>
       </div>
-      
+
       {filteredSessions.length > 0 ? (
         <div className="space-y-4">
           {filteredSessions.map(session => {
             const book = books.find(b => b.id === session.bookId);
             const pagesRead = session.endPage - session.startPage;
-            
+
             return (
               <Card key={session.id}>
                 <CardContent className="p-4">
@@ -149,7 +207,7 @@ const Sessions = () => {
                           {format(new Date(session.date), "MMM d, yyyy")}
                         </div>
                       </div>
-                      
+
                       <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="flex items-center text-sm">
                           <BookOpen className="h-4 w-4 mr-2 text-book-500" />
@@ -158,17 +216,17 @@ const Sessions = () => {
                             {' '}({session.startPage} – {session.endPage})
                           </span>
                         </div>
-                        
+
                         <div className="flex items-center text-sm">
                           <Clock className="h-4 w-4 mr-2 text-book-500" />
                           <span>{session.duration} minutes</span>
                         </div>
-                        
+
                         <div className="text-sm text-muted-foreground">
                           {formatDistanceToNow(new Date(session.date), { addSuffix: true })}
                         </div>
                       </div>
-                      
+
                       {session.notes && (
                         <p className="mt-2 text-sm text-muted-foreground border-t border-book-100 pt-2">
                           {session.notes}

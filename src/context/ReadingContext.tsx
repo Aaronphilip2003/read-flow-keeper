@@ -11,6 +11,7 @@ interface ReadingContextType {
   goals: ReadingGoal[];
   stats: ReadingStats;
   setBooks: (books: Book[]) => void;
+  setSessions: (sessions: ReadingSession[]) => void;
   addBook: (book: Omit<Book, "id">) => Book;
   updateBook: (book: Book) => void;
   deleteBook: (id: string) => void;
@@ -119,30 +120,74 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     toast("Book deleted successfully");
   };
 
-  const addSession = (sessionData: Omit<ReadingSession, "id">) => {
-    const newSession = {
-      id: crypto.randomUUID(),
-      ...sessionData,
-    };
+  const addSession = async (sessionData: Omit<ReadingSession, "id">) => {
+    try {
+      // Add session to Supabase
+      const { data, error } = await supabase
+        .from('reading_sessions')
+        .insert([{
+          book_id: sessionData.bookId,
+          start_page: sessionData.startPage,
+          end_page: sessionData.endPage,
+          date: sessionData.date,
+          duration: sessionData.duration,
+          notes: sessionData.notes,
+        }])
+        .select()
+        .single();
 
-    setSessions((prev) => [...prev, newSession]);
+      if (error) throw error;
 
-    setBooks((prev) =>
-      prev.map((book) =>
-        book.id === sessionData.bookId
-          ? {
-            ...book,
-            currentPage: Math.max(book.currentPage, sessionData.endPage),
-            status:
-              sessionData.endPage >= book.totalPages
-                ? "completed"
-                : book.status === "to-read" ? "reading" : book.status
-          }
-          : book
-      )
-    );
+      // Transform the response to match our app's data structure
+      const newSession = {
+        id: data.id,
+        bookId: data.book_id,
+        startPage: data.start_page,
+        endPage: data.end_page,
+        date: data.date,
+        duration: data.duration,
+        notes: data.notes,
+      };
 
-    toast("Reading session logged successfully");
+      // Update local state
+      setSessions(prev => [...prev, newSession]);
+
+      // Update book progress
+      const book = books.find(b => b.id === sessionData.bookId);
+      if (book) {
+        const updatedBook = {
+          ...book,
+          currentPage: Math.max(book.currentPage, sessionData.endPage),
+          status: sessionData.endPage >= book.totalPages ? "completed" :
+            book.status === "to-read" ? "reading" : book.status
+        };
+
+        // Update book in Supabase
+        const { error: bookError } = await supabase
+          .from('books')
+          .update({
+            current_page: updatedBook.currentPage,
+            status: updatedBook.status,
+          })
+          .eq('id', book.id);
+
+        if (bookError) throw bookError;
+
+        // Update local book state
+        setBooks(prev => prev.map(b => b.id === book.id ? updatedBook : b));
+      }
+
+      toast("Reading session logged successfully");
+      return newSession;
+    } catch (error) {
+      console.error('Error adding session:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to log reading session. Please try again.",
+      });
+      throw error;
+    }
   };
 
   const deleteSession = (id: string) => {
@@ -304,6 +349,7 @@ export const ReadingProvider = ({ children }: { children: ReactNode }) => {
     goals,
     stats,
     setBooks,
+    setSessions,
     addBook,
     updateBook,
     deleteBook,
