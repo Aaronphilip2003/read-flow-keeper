@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 import {
     Accordion,
     AccordionContent,
@@ -107,24 +108,22 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; titl
 );
 
 const Home = () => {
+    const navigate = useNavigate();
+    const { user } = useAuth();
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-amber-50/40 to-white">
             {/* Hero Section */}
             <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]"></div>
                 <div className="container mx-auto px-4 py-20 md:py-32">
-                    <div className="grid md:grid-cols-2 gap-16 items-center">
+                    <div className="grid md:grid-cols-2 gap-16 items-center relative">
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.6 }}
-                            className="space-y-8"
+                            className="space-y-8 relative z-10"
                         >
-                            <div className="inline-block">
-                                <span className="bg-amber-100/50 text-amber-900 px-4 py-2 rounded-full text-sm font-medium">
-                                    Now Available
-                                </span>
-                            </div>
                             <div className="space-y-4">
                                 <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-[1.1] tracking-tight">
                                     Transform Your
@@ -137,19 +136,21 @@ const Home = () => {
                             </div>
                             <div className="space-y-6 max-w-xl">
                                 <p className="text-xl text-gray-600 leading-relaxed">
-                                    ReadFlow helps you build lasting reading habits through intelligent tracking and powerful analytics. Discover insights about your reading patterns and achieve your reading goals.
+                                    Track your reading progress, take notes, and achieve your reading goals with ReadFlow - your personal reading companion.
                                 </p>
-                                <div className="flex flex-wrap gap-4 items-center pt-4">
-                                    <Link to="/register">
-                                        <Button size="lg" className="text-lg px-8 py-6 bg-amber-800 hover:bg-amber-900 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                                            Get Started
-                                        </Button>
-                                    </Link>
-                                    <Link to="/login">
-                                        <Button size="lg" variant="outline" className="text-lg px-8 py-6 text-amber-900 border-amber-200 hover:bg-amber-50 transition-all duration-300">
-                                            Sign In
-                                        </Button>
-                                    </Link>
+                                <div className="flex flex-wrap gap-4 items-center pt-4 relative z-20">
+                                    <a
+                                        href={user ? '/dashboard' : '/register'}
+                                        className="text-lg px-8 py-6 bg-amber-800 hover:bg-amber-900 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-md font-medium inline-block"
+                                    >
+                                        Get Started
+                                    </a>
+                                    <a
+                                        href="/login"
+                                        className="text-lg px-8 py-6 text-amber-900 border border-amber-200 hover:bg-amber-50 transition-all duration-300 rounded-md font-medium inline-block"
+                                    >
+                                        Sign In
+                                    </a>
                                 </div>
                             </div>
                         </motion.div>
@@ -157,7 +158,7 @@ const Home = () => {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.6 }}
-                            className="relative"
+                            className="relative z-0"
                         >
                             <div className="flex justify-center gap-6 md:gap-8 pr-4">
                                 {dummyBooks.map((book, index) => (
@@ -309,7 +310,7 @@ const Home = () => {
             </div>
 
             {/* CTA Section */}
-            <div className="bg-gradient-to-r from-amber-900 to-amber-800 text-white py-24">
+            <div className="bg-gradient-to-r from-amber-900 to-amber-800 text-white py-24 relative z-10">
                 <div className="container mx-auto px-4 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -323,17 +324,19 @@ const Home = () => {
                         <p className="text-xl text-amber-100 mb-8">
                             Join thousands of readers who are tracking their progress and achieving their reading goals with ReadFlow.
                         </p>
-                        <div className="flex justify-center gap-4">
-                            <Link to="/register">
-                                <Button size="lg" variant="secondary" className="text-lg px-8 py-6 bg-white text-amber-900 hover:bg-amber-50 shadow-lg hover:shadow-xl transition-all duration-300">
-                                    Sign Up Now
-                                </Button>
-                            </Link>
-                            <Link to="/login">
-                                <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-white text-white hover:bg-white/10 transition-all duration-300">
-                                    Sign In
-                                </Button>
-                            </Link>
+                        <div className="flex justify-center gap-4 relative z-20">
+                            <a
+                                href={user ? '/dashboard' : '/register'}
+                                className="text-lg px-8 py-6 bg-white text-amber-900 hover:bg-amber-50 shadow-lg hover:shadow-xl transition-all duration-300 rounded-md font-medium inline-block"
+                            >
+                                Sign Up Now
+                            </a>
+                            <a
+                                href="/login"
+                                className="text-lg px-8 py-6 border-2 border-white text-white hover:bg-white/10 transition-all duration-300 rounded-md font-medium inline-block"
+                            >
+                                Sign In
+                            </a>
                         </div>
                     </motion.div>
                 </div>

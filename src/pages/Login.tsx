@@ -59,8 +59,8 @@ export default function Login() {
                 description: "Logged in successfully",
             })
 
-            // Get the stored path or default to '/'
-            const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/'
+            // Get the stored path or default to '/dashboard'
+            const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/dashboard'
             // Clear the stored path
             sessionStorage.removeItem('redirectAfterLogin')
             // Redirect to the stored path
